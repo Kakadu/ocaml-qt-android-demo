@@ -1,0 +1,4 @@
+android-build/
+*.so
+*.s
+qrc_qml.cpp

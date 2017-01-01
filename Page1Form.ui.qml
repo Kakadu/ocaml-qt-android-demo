@@ -14,7 +14,7 @@ Item {
         TextField {
             id: textField1
             placeholderText: qsTr("Text Field")
-            text: "wtf"
+            text: demo.name
         }
 
         Button {
