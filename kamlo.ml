@@ -1,4 +1,4 @@
-external print_hack: string -> unit = "caml_print_hack"
+(* external print_hack: string -> unit = "caml_print_hack" *)
 
 let doCaml () = "Hello from OCaml"
 

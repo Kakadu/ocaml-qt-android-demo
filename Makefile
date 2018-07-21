@@ -1,16 +1,16 @@
-#NDK=/home/kakadu/prog/qt/android-ndk-r13b
-#NDK=$(system opam config var prefix)/android-ndk
 NDK=/home/kakadu/.opam_android/4.04.0+32bit/android-ndk
 SDK=/home/kakadu/prog/qt/android-sdk-tools_r25.2.5
+
+# https://source.android.com/setup/start/build-numbers
 # Lollipop    5.0 21
 # Marshmallow 6.x 23
 ANDROID_API_LEVEL=23
 NDK_PLATFORM=android-$(ANDROID_API_LEVEL)
 
-CC=$(NDK)/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-g++
+CXX=$(NDK)/toolchains/arm-linux-androideabi-4.9/prebuilt/linux-x86_64/bin/arm-linux-androideabi-g++
 QT_BIN=$(shell qmake -query QT_INSTALL_BINS)
 RCC=$(QT_BIN)/rcc
-CXXFLAGS=-Wno-psabi -march=armv7-a -mfloat-abi=softfp -mfpu=vfp \
+CXXFLAGS=-g -Wno-psabi -march=armv7-a -mfloat-abi=softfp -mfpu=vfp \
   -ffunction-sections -funwind-tables -fstack-protector \
 	-fno-short-enums -DANDROID -Wa,--noexecstack -fno-builtin-memmove \
   -std=c++11 -O2 -Os -fomit-frame-pointer -fno-strict-aliasing \
@@ -28,7 +28,7 @@ QT_INCLUDES=-I. \
 	-I$(NDK)/platforms/$(NDK_PLATFORM)/arch-arm/usr/include \
   -I`qmake -query QT_INSTALL_HEADERS`/mkspecs/android-g++
 
-QT_DEFINES=-DQT_NO_DEBUG -DQT_QUICK_LIB -DQT_GUI_LIB -DQT_QML_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
+QT_DEFINES=-DQT_QUICK_LIB -DQT_GUI_LIB -DQT_QML_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
 QT_LINK_FLAGS=\
   -L$(NDK)/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a \
   -L$(NDK)/platforms/$(NDK_PLATFORM)/arch-arm//usr/lib \
@@ -37,8 +37,8 @@ QT_LINK_FLAGS=\
 #	-L/opt/android/ndk/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a \
 #	-L/opt/android/ndk/platforms/android-9/arch-arm//usr/lib \
 
-OCAMLOPT=ocamlfind -toolchain android opt -ccopt -fPIC -ccopt -pic
-OCAMLC=  ocamlfind -toolchain android c   -ccopt -fPIC #-ccopt -pic
+OCAMLOPT=ocamlfind -toolchain android opt -g -ccopt -fPIC -ccopt -pic
+OCAMLC=  ocamlfind -toolchain android c   -g -ccopt -fPIC
 OCAML_INCLUDES=-I`ocamlfind -toolchain android opt -where`
 OCAML_OPTLINK_FLAGS=-L`ocamlfind -toolchain android opt -where` -lasmrun
 OCAML_BYTELINK_FLAGS=-L`ocamlfind -toolchain android c  -where` -lcamlrun
@@ -50,7 +50,7 @@ all: kamlo lib apk deploy
 
 lib: main.o qrc_qml.cpp qrc_qml.o kamlocode.o $(OUT)
 main.o: main.cpp
-	$(CC) -c $(CXXFLAGS) $(QT_DEFINES) $(QT_INCLUDES) $(OCAML_INCLUDES) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) $(QT_DEFINES) $(QT_INCLUDES) $(OCAML_INCLUDES) -o $@ $^
 
 qrc_qml.cpp: main.qml  Page1Form.ui.qml  Page1.qml
 qrc_qml.cpp: qml.qrc
@@ -61,7 +61,7 @@ qrc_qml.o: qrc_qml.cpp
 
 OBJECTS=main.o qrc_qml.o kamlocode.o
 $(OUT):
-	$(CC) --sysroot=$(NDK)/platforms/$(NDK_PLATFORM)/arch-arm/ -Wl,-soname,$(OUT) \
+	$(CXX) --sysroot=$(NDK)/platforms/$(NDK_PLATFORM)/arch-arm/ -Wl,-soname,$(OUT) \
 	-Wl,-rpath=`qmake -query QT_INSTALL_LIBS` -Wl,--no-undefined -Wl,-z,noexecstack -shared -o $@ \
 	$(OBJECTS) \
 	$(QT_LINK_FLAGS) $(OCAML_BYTELINK_FLAGS) \
@@ -105,7 +105,7 @@ clean:
 
 
 ###################################################################
-.PHONY: opam_conf config $(JSON_CONFIG_NAME)
+.PHONY: ndk-stack opam_conf config log $(JSON_CONFIG_NAME)
 opam_conf:
 	ARCH=arm SUBARCH=armv7 SYSTEM=linux_eabi \
 		CCARCH=arm TOOLCHAIN=arm-linux-androideabi-4.9 \
@@ -123,3 +123,10 @@ $(JSON_CONFIG_NAME):
 		-e "s/SDKBUILDTOOLSVERSION/21.1.2/" \
 		-e "s~NDKPATH~$(NDK)~" \
 			> $@
+
+ndk-stack:
+	$(SDK)/platform-tools/adb logcat | $(NDK)/ndk-stack \
+		-sym ./android-build/libs/armeabi-v7a
+
+log:
+	$(SDK)/platform-tools/adb logcat -v color *:V

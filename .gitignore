@@ -2,3 +2,5 @@ android-build/
 *.so
 *.s
 qrc_qml.cpp
+/kamlocode.cds
+/android-libtest-android2.so-deployment-settings.json
