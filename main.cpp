@@ -40,15 +40,21 @@ const QString doCaml() {
 }
 
 int main(int argc, char** argv) {
+  __android_log_print(ANDROID_LOG_ERROR,   "kamlo", "%s %d", __FILE__, __LINE__);
+  __android_log_print(ANDROID_LOG_INFO,    "kamlo", "%s %d", __FILE__, __LINE__);
+  __android_log_print(ANDROID_LOG_WARN,    "kamlo", "%s %d", __FILE__, __LINE__);
   QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
   QGuiApplication app(argc, argv);
+  __android_log_print(ANDROID_LOG_WARN,    "kamlo", "%s %d", __FILE__, __LINE__);
 
   caml_main(argv);
 
-  __android_log_print(ANDROID_LOG_INFO, "kamlo", "main");
+  __android_log_print(ANDROID_LOG_ERROR, "kamlo", "main");
   QQmlPropertyMap ownerData;
 
-  const QString& msg = doCaml();
+  QString msg = "no OCaml";
+  msg = doCaml();
+  __android_log_print(ANDROID_LOG_WARN,    "kamlo", "%s %d", __FILE__, __LINE__);
   ownerData.insert("name", QVariant(msg));
 
   QQmlApplicationEngine engine;
